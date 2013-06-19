@@ -31,14 +31,14 @@ public class CreateCustomer implements CustomCodeMethod {
 
     @Override
     public ResponseToProcess execute(ProcessedAPIRequest request, SDKServiceProvider serviceProvider) {
-        String token = "";
-        String username = "";
+        String token = request.getParams().get("token");
+        String username = request.getParams().get("username");
 
         LoggerService logger = serviceProvider.getLoggerService(CreateCustomer.class);
         logger.debug(request.getBody());
         Map<String, String> errMap = new HashMap<String, String>();
 
-        JSONParser parser = new JSONParser();
+        /*JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(request.getBody());
             JSONObject jsonObject = (JSONObject) obj;
@@ -51,7 +51,7 @@ public class CreateCustomer implements CustomCodeMethod {
             logger.error(pe.getMessage(), pe);
             return Util.badRequestResponse(errMap, pe.getMessage());
         }
-
+        */
         if (Util.hasNulls(token, username)){
             return Util.badRequestResponse(errMap);
         }
