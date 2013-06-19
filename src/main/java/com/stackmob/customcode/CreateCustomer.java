@@ -16,12 +16,13 @@ import java.net.HttpURLConnection;
 import java.util.*;
 
 import com.stripe.model.Customer;
+import com.stripe.exception.*;
 
 public class CreateCustomer implements CustomCodeMethod {
 
     @Override
     public String getMethodName() {
-        return "createCustomer";
+        return "create_customer";
     }
 
     @Override
@@ -56,10 +57,32 @@ public class CreateCustomer implements CustomCodeMethod {
             return Util.badRequestResponse(errMap);
         }
 
-        Map<String, SMValue> feedback = new HashMap<String, SMValue>();
-        //feedback.put("token", new SMInt(Long.parseLong(year)));
+        Map<String, Customer> feedback = new HashMap<String, Customer>();
+        Map<String, Object> customerParams = new HashMap<String, Object>();
+        customerParams.put("card", token);
+        customerParams.put("email", username);
 
-        DataService ds = serviceProvider.getDataService();
+        Customer customer;
+        try{
+        customer = Customer.create(customerParams);
+        feedback.put("customer", customer);
+        } catch (CardException ce) {
+            return Util.internalErrorResponse("card exception", ce, errMap); // http 500 - internal server error
+
+        } catch (APIConnectionException ace) {
+            return Util.internalErrorResponse("api exception", ace, errMap); // http 500 - internal server error
+
+        } catch (InvalidRequestException ire) {
+            return Util.internalErrorResponse("invalid request", ire, errMap); // http 500 - internal server error
+        } catch (AuthenticationException ae) {
+            return Util.internalErrorResponse("authentication exception", ae, errMap); // http 500 - internal server error
+        } catch (StripeException se) {
+            return Util.internalErrorResponse("stripe exception", se, errMap); // http 500 - internal server error
+        } catch (Exception e) {
+            return Util.internalErrorResponse("something else", e, errMap); // http 500 - internal server error
+        }
+
+        /*DataService ds = serviceProvider.getDataService();
         List<SMUpdate> update = new ArrayList<SMUpdate>();
 
         update.add(new SMSet("title", new SMString(token)));
@@ -75,7 +98,7 @@ public class CreateCustomer implements CustomCodeMethod {
         } catch (DatastoreException dse) {
             return Util.internalErrorResponse("datastore_exception", dse, errMap); // http 500 - internal server error
         }
-
+        */
         return new ResponseToProcess(HttpURLConnection.HTTP_OK, feedback);
     }
 
