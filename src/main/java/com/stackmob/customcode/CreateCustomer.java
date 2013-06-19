@@ -1,15 +1,17 @@
 package com.stackmob.customcode;
 
+import com.stackmob.core.InvalidSchemaException;
+import com.stackmob.core.DatastoreException;
 import com.stackmob.core.customcode.CustomCodeMethod;
 import com.stackmob.core.rest.ProcessedAPIRequest;
 import com.stackmob.core.rest.ResponseToProcess;
 import com.stackmob.sdkapi.SDKServiceProvider;
+import com.stackmob.sdkapi.*;
 
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import com.stripe.model.Customer;
 
 public class CreateCustomer implements CustomCodeMethod {
 
@@ -20,14 +22,26 @@ public class CreateCustomer implements CustomCodeMethod {
 
     @Override
     public List<String> getParams() {
-        return new ArrayList<String>();
+        return Arrays.asList("token", "username");
     }
 
     @Override
     public ResponseToProcess execute(ProcessedAPIRequest request, SDKServiceProvider serviceProvider) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("msg", "Hello, world!");
-        return new ResponseToProcess(HttpURLConnection.HTTP_OK, map);
+        DataService ds = serviceProvider.getDataService();
+        List<SMCondition> query = new ArrayList<SMCondition>();
+        Map<String, List<SMObject>> results = new HashMap<String, List<SMObject>>();
+
+        String username = request.getParams().get("username");
+
+        try {
+            query.add(new SMEquals("username", new SMString(username)));
+
+            results.put("results", ds.readObjects("pnuser", query));
+
+        } catch (InvalidSchemaException ise) {
+        } catch (DatastoreException dse) {}
+
+        return new ResponseToProcess(HttpURLConnection.HTTP_OK, results);
     }
 
 }
